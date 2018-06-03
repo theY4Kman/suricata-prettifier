@@ -50,7 +50,7 @@ Use it to generate sweet posts for your LiveJournal (Netscape Navigator required
 prettify-suricata -f html input.rules input.formatted.html style=vim full=True
 ```
 
-Read from stdin and write to stdou to create your own pipe dream
+Read from stdin and write to stdout to create your own pipe dream
 
 ```bash
 head -n 50 input.rules | prettify-suricata -f html - - style=vim full=True | tee input.formatted.html

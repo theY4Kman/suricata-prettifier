@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='suricata-prettifier',
-    version='0.0.2',
+    version='0.0.3',
     packages=['suricata_prettifier'],
     url='https://github.com/theY4Kman/suricata-prettifier',
     license='BSD 2-Clause',
