@@ -15,35 +15,61 @@ class SuricataLexer(RegexLexer):
 
     tokens = {
         'whitespace': [
-            (r'(\\)(\n)', bygroups(Comment.Preproc, Text)),
+            (r'(\s*)(\\)(\n)', bygroups(Text, Comment.Preproc, Text)),
             (r'\s+', Text),
             (r'#.*$', Comment.Singleline),
         ],
 
-        'host-port': [
-            include('host'),
-            (r'\[', Punctuation, 'host-list'),
-            include('port'),
-        ],
-        'host-list': [
-            include('host'),
-            (r',', Punctuation, ('#pop', 'host-list')),
-            (r'\]', Punctuation, '#pop'),
-        ],
-        'host': [
-            (r'!', Operator),
-            (words(['any']), Name.Builtin),
-            (var, Name.Variable),
-            (r'\d+\.\d+\.\d+\.\d+(?:/\d+)?', Literal),
-        ],
-        'port': [
+        'root': [
             include('whitespace'),
-            (words(['any']), Name.Builtin),
-            (r'\d+', Number.Integer),
+            (words(['pass', 'drop', 'reject', 'alert']), Keyword.Type, 'protocol'),
         ],
 
+        'protocol': [
+            include('whitespace'),
+            (words(['tcp', 'udp', 'icmp', 'ip', 'http', 'ftp', 'tls', 'smb', 'dns', 'smtp']), Keyword.Reserved, (
+                '#pop',
+
+                'source',
+                'port-expr',
+                'host-expr',
+            )),
+        ],
+        'source': [
+            include('whitespace'),
+            (words(['<>', '->']), Operator, (
+                '#pop',
+
+                'dest',
+                'port-expr',
+                'host-expr',
+            )),
+        ],
+        'dest': [
+            include('whitespace'),
+            ('\(', Punctuation, (
+                '#pop',
+                'opts',
+            )),
+        ],
+        'opts': [
+            include('whitespace'),
+            (r'\)', Punctuation, '#pop'),
+            default('opt'),
+        ],
+
+        'opt': [
+            include('whitespace'),
+            (prop, Name.Property, 'opt'),
+            (':', Punctuation, ('value', 'negatable')),
+            (';', Punctuation, '#pop'),
+            default('#pop'),
+        ],
         'value': [
             include('whitespace'),
+            (r'(")(/)((?:[^/]|\\/)+)(/)(\w*)(")',
+                bygroups(String.Delimiter, Punctuation, String.Regex, Punctuation, String.Regex, String.Delimiter),
+                '#pop'),
             (r'"', String.Delimiter, 'string'),
             (r'\\;', String.Escape),
             (r'[^;"]*', String.Char, '#pop'),
@@ -54,33 +80,43 @@ class SuricataLexer(RegexLexer):
             ('"', String.Delimiter, '#pop:2'),
         ],
 
-        'root': [
+        'negatable': [
             include('whitespace'),
-            (words(['pass', 'drop', 'reject', 'alert']), Keyword.Type, 'signature'),
+            (r'!', Operator),
+            include('whitespace'),
+            default('#pop'),
         ],
 
-        'signature': [
+        'host-expr': [
             include('whitespace'),
-            (words(['tcp', 'udp', 'icmp', 'ip', 'http', 'ftp', 'tls', 'smb', 'dns']), Keyword.Reserved, 'source'),
-            default('#pop'),
+            (words(['any']), Name.Builtin, '#pop'),
+            (r'!', Operator),
+            (r'\[', Punctuation, ('#pop', 'host-list', 'host', 'negatable')),
+            default(('#pop', 'host')),
         ],
-        'source': [
-            include('whitespace'),
-            include('host-port'),
-            include('whitespace'),
-            (words(['<>', '->']), Operator, ('#pop', 'dest')),
-            default('#pop'),
+        'host': [
+            (var, Name.Variable, '#pop'),
+            (r'\d+\.\d+\.\d+\.\d+(?:/\d+)?', Literal, '#pop'),
         ],
-        'dest': [
-            include('whitespace'),
-            include('host-port'),
-            ('\(', Punctuation, ('#pop', 'opts')),
+        'host-list': [
+            (r'\]', Punctuation, '#pop'),
+            (r',', Punctuation, ('host', 'negatable')),
         ],
-        'opts': [
+
+        'port-expr': [
             include('whitespace'),
-            (r'\)', Punctuation, '#pop'),
-            (prop, Name.Property),
-            (':', Punctuation, 'value'),
-            (';', Punctuation, ('#pop', 'opts')),
-        ]
+            (words(['any']), Name.Builtin, '#pop'),
+            (r'!', Operator),
+            (r'\[', Punctuation, ('#pop', 'port-list', 'port', 'negatable')),
+            default(('#pop', 'port')),
+        ],
+        'port': [
+            (var, Name.Variable, '#pop'),
+            (r'(\d+)([:-])(\d+)', bygroups(Number.Integer, Punctuation, Number.Integer), '#pop'),
+            (r'\d+', Number.Integer, '#pop'),
+        ],
+        'port-list': [
+            (r'\]', Punctuation, '#pop'),
+            (r',', Punctuation, ('port', 'negatable')),
+        ],
     }
