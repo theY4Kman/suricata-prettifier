@@ -1,3 +1,0 @@
-click>=6.7
-pygments>=2.2.0
-idstools>=0.6.0

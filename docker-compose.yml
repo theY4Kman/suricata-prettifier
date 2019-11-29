@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  suricata-prettifier:
+    build:
+      context: .
+    ports:
+      - 8080:80
