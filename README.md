@@ -1,5 +1,7 @@
 # suricata-prettifier
 
+Now available on the world-wide web @ https://suricata.y4k.dev
+
 Snake-powered pipe cleaner eats single-line Suricata rules and poops out pleasantly-spaced, vibrantly-coloured delicacies straight to your plate. Examine this exemplary example:
 
 ```
